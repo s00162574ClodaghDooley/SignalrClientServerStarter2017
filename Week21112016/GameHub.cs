@@ -21,7 +21,7 @@ namespace Week21112016
             new CollectableData(1,
             new Position { X= r.Next(100,1800), Y = r.Next(100,1800) }
             ,20),
-            new CollectableData(1,
+            new CollectableData(2,
             new Position { X= r.Next(100,1800), Y = r.Next(100,1800) }
             ,30),
 
@@ -40,6 +40,12 @@ namespace Week21112016
         public void join()
         {
             Clients.Caller.joined(WorldX,WorldY);
+        }
+        public PlayerData JoinPlayer(Position pos)
+        {
+            PlayerData player = new PlayerData("joined", string.Empty, Players.Count().ToString(), "Player X", pos.X, pos.Y);
+            Players.Add(player);
+            return player;
         }
     }
 }
