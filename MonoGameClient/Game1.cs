@@ -8,6 +8,7 @@ using Sprites;
 using Microsoft.Xna.Framework.Audio;
 using CameraNS;
 using GameData;
+using System.Linq;
 
 namespace MonoGameClient
 {
@@ -80,7 +81,7 @@ namespace MonoGameClient
             Action<int, int> joined = cJoined;
             proxy.On("joined", joined);
             proxy.Invoke("join");
-                        
+
         }
 
         private void cJoined(int arg1, int arg2)
@@ -92,15 +93,35 @@ namespace MonoGameClient
 
             Joined = true;
             // Setup Player
-            new Player(this, new Texture2D[] {
+            new Player(this, new Texture2D[] {//different textures for each direction of movement
                             Content.Load<Texture2D>(@"Textures\left"),
                             Content.Load<Texture2D>(@"Textures\right"),
                             Content.Load<Texture2D>(@"Textures\up"),
                             Content.Load<Texture2D>(@"Textures\down"),
                             Content.Load<Texture2D>(@"Textures\stand"),
-                        }, new SoundEffect[] { }, GraphicsDevice.Viewport.Bounds.Center.ToVector2(),
-                        8, 0, 5.0f);
-            proxy.Invoke<PlayerData>("JoinPlayer", new Position { X = GraphicsDevice.Viewport.Bounds.Center.X, Y = GraphicsDevice.Viewport.Bounds.Center.Y }).ContinueWith((p) => { if (p.Result == null) connectionMessage = "No player data returned"; else { Player player; player = (Player)Components.FirstOrDefault(pl => pl.GetType() == typeof(Player)); if(player != null) player.playerData = p.Result} });
+                        },
+                        new SoundEffect[] { }, GraphicsDevice.Viewport.Bounds.Center.ToVector2(),
+                        8, 0, 5.0f); //different audio for each direction of movement, not applied yet I believe
+            proxy.Invoke<PlayerData>("JoinPlayer",
+                new Position
+                {   //player entry position
+                    X = GraphicsDevice.Viewport.Bounds.Center.X,
+                    Y = GraphicsDevice.Viewport.Bounds.Center.Y
+                })
+                .ContinueWith(
+                (p) =>
+                {   //if there is no player found
+                    if (p.Result == null)
+                        connectionMessage = "No player data returned";
+                    else
+                    {// if player is found
+                        Player player;
+                        player = (Player)Components
+                        .FirstOrDefault(pl => pl.GetType() == typeof(Player));
+                        if (player != null)
+                            player.playerData = p.Result;
+                    }
+                });
 
         }
 
@@ -114,6 +135,7 @@ namespace MonoGameClient
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Services.AddService(spriteBatch);
             messageFont = Content.Load<SpriteFont>(@"Fonts\ScoreFont");
+            Services.AddService(Content.Load<SpriteFont>(@"Fonts\PlayerFont"));
             backGround = Content.Load<Texture2D>(@"Textures\background");
             // TODO: use this.Content to load your game content here
         }
@@ -168,7 +190,7 @@ namespace MonoGameClient
         }
 
         private void DrawPlay()
-        {
+        {   //draws world
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, null, null, Camera.CurrentCameraTranslation);
             spriteBatch.Draw(backGround, worldRect, Color.Red);
             spriteBatch.End();
